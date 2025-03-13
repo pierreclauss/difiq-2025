@@ -190,6 +190,23 @@ daily_returns %>%
 
 ``` r
 daily_returns %>%
+  ggplot(aes(x = date, y = dreturns, color = symbol)) +
+  geom_line(size = 0.25) +
+  labs(
+    title = "Stock",
+    x = "Date",
+    y = "Daily Returns",
+    color = ""
+  ) +
+  facet_wrap( ~ symbol, ncol = 2, scales = "free_y") +
+  theme_tq() +
+  scale_color_tq()
+```
+
+![](VaR_files/figure-gfm/viz%20data-1.png)<!-- -->
+
+``` r
+daily_returns %>%
   ggplot(aes(x = dreturns, fill = symbol)) +
   geom_density(alpha = 0.5) +
   labs(title = "Densités des rentabilités arithmétiques",
@@ -199,7 +216,7 @@ daily_returns %>%
   facet_wrap(~ symbol, ncol = 2)
 ```
 
-![](VaR_files/figure-gfm/viz%20data-1.png)<!-- -->
+![](VaR_files/figure-gfm/viz%20data-2.png)<!-- -->
 
 ``` r
 daily_returns %>%
@@ -211,7 +228,7 @@ daily_returns %>%
   facet_wrap(~ symbol, ncol = 2)
 ```
 
-![](VaR_files/figure-gfm/viz%20data-2.png)<!-- -->
+![](VaR_files/figure-gfm/viz%20data-3.png)<!-- -->
 
 ## 2 Modélisation
 
