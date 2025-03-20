@@ -248,6 +248,81 @@ quantile(cac40, probs = c(0.01, 0.001))
     ##          1%        0.1% 
     ## -0.03889628 -0.06348220
 
+``` r
+# VaR Historique et Gaussienne - Option 1
+daily_returns %>%
+  group_by(symbol) %>%
+  summarise(Histo = quantile(dreturns, c(0.01, 0.001)),
+            Gauss = mean(dreturns) + sd(dreturns) * qnorm(c(0.01, 0.001), 0, 1))
+```
+
+    ## # A tibble: 8 × 3
+    ## # Groups:   symbol [4]
+    ##   symbol   Histo   Gauss
+    ##   <chr>    <dbl>   <dbl>
+    ## 1 ^FCHI  -0.0389 -0.0310
+    ## 2 ^FCHI  -0.0635 -0.0412
+    ## 3 ^IXIC  -0.0409 -0.0338
+    ## 4 ^IXIC  -0.0727 -0.0451
+    ## 5 ^MXX   -0.0386 -0.0319
+    ## 6 ^MXX   -0.0642 -0.0426
+    ## 7 ^N225  -0.0387 -0.0338
+    ## 8 ^N225  -0.0697 -0.0449
+
+``` r
+# VaR Historique et Gaussienne - Option 2
+# pour le CAC 40
+cac40 <- as.matrix(na.omit(table_returns[,1]))
+quantile(cac40, probs = c(0.01, 0.001))
+```
+
+    ##          1%        0.1% 
+    ## -0.03889628 -0.06348220
+
+``` r
+mean(cac40) + sd(cac40) * qnorm(c(0.01, 0.001), 0, 1)
+```
+
+    ## [1] -0.03097847 -0.04124001
+
+``` r
+# pour les 4 indices en même temps
+table_returns %>%
+  apply(2, quantile, probs = c(0.01, 0.001), na.rm = T)
+```
+
+    ##            ^FCHI       ^IXIC       ^N225        ^MXX
+    ## 1%   -0.03889628 -0.04087720 -0.03868523 -0.03855831
+    ## 0.1% -0.06348220 -0.07267953 -0.06966739 -0.06415691
+
+``` r
+table_returns %>%
+  apply(2, function(x) mean(x, na.rm = T) + sd(x, na.rm = T) * qnorm(c(0.01, 0.001), 0, 1))
+```
+
+    ##            ^FCHI       ^IXIC       ^N225        ^MXX
+    ## [1,] -0.03097847 -0.03384652 -0.03376006 -0.03192393
+    ## [2,] -0.04124001 -0.04513278 -0.04489852 -0.04258029
+
+``` r
+# Estimation de la VaR skew Student pour le CAC 40 - option 1
+library(sn)
+esti <- daily_returns %>%
+  filter(symbol == '^FCHI') %>%
+  reframe(st.mple(y = dreturns)$dp)
+qst(c(0.01, 0.001), esti[[1, 2]], esti[[2, 2]], esti[[3, 2]], esti[[4, 2]])
+```
+
+    ## [1] -0.04338298 -0.10551925
+
+``` r
+# Estimation de la VaR skew Student pour le CAC 40 - option 2
+esti <- st.mple(y = cac40)
+qst(c(0.01, 0.001), esti$dp["xi"], esti$dp["omega"], esti$dp["alpha"], esti$dp["nu"])
+```
+
+    ## [1] -0.04338298 -0.10551925
+
 Voici ci-dessous les VaR demandées dans *l’exercice 1.1* pour les
 différents indices avec alpha = 1%.
 
