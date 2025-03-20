@@ -385,10 +385,64 @@ partir duquel il est raisonnable de penser que les extrêmes suivent une
 loi GPD. Cela se fait grâce au mean-excess plot : le seuil optimal est
 la valeur à partir de laquelle la tendance est croissante.
 
+``` r
+library(evir)
+
+layout(matrix(1:4,2,2))
+
+invisible(daily_returns %>%
+            filter(symbol == '^FCHI') %>%
+            reframe(meplot(-dreturns[dreturns < 0])))
+
+invisible(daily_returns %>%
+            filter(symbol == '^IXIC') %>%
+            reframe(meplot(-dreturns[dreturns < 0])))
+
+invisible(daily_returns %>%
+            filter(symbol == '^N225') %>%
+            reframe(meplot(-dreturns[dreturns < 0])))
+
+invisible(daily_returns %>%
+            filter(symbol == '^MXX') %>%
+            reframe(meplot(-dreturns[dreturns < 0])))
+```
+
 ![](VaR_files/figure-gfm/var%20TVE-1.png)<!-- -->
+
+``` r
+VaR_TVE <- function(data,
+                    alpha,
+                    bloc = 21,
+                    seuil = 0.01)
+{
+  # VaR GEV
+  g1 <- gev(-data, bloc)
+  alphaGEV <- 1 - bloc * alpha
+  GEV <-
+    -qgev(alphaGEV, g1$par.ests["xi"], g1$par.ests["mu"], g1$par.ests["sigma"])
+  GEV <- percent(GEV, 0.01)
+  
+  # VaR GPD
+  g2 <- gpd(-data, seuil)
+  p <- length(g2$data) / length(data)
+  GPD <- -qgpd(1 - alpha / p, g2$par.ests["xi"], seuil, g2$par.ests["beta"])
+  GPD <- percent(GPD, 0.01)
+  
+  tibble(
+    GEV = GEV, 
+    GPD = GPD)
+}
+```
 
 Voici ci-dessous les VaR TVE demandées dans *l’exercice 2.1* pour les
 différents indices avec alpha = 1%.
+
+``` r
+VaR_1 <- daily_returns %>%
+  group_by(symbol) %>%
+  reframe(VaR_TVE(dreturns, alpha = 0.01, seuil = 0.03))
+pander(VaR_1)
+```
 
 | symbol |  GEV   |  GPD   |
 |:------:|:------:|:------:|
@@ -399,6 +453,13 @@ différents indices avec alpha = 1%.
 
 Voici ci-dessous les VaR TVE demandées dans *l’exercice 2.1* pour les
 différents indices avec alpha = 0.1%.
+
+``` r
+VaR_01 <- daily_returns %>%
+  group_by(symbol) %>%
+  reframe(VaR_TVE(dreturns, alpha = 0.001, seuil = 0.03))
+pander(VaR_01)
+```
 
 | symbol |  GEV   |  GPD   |
 |:------:|:------:|:------:|
